@@ -1,6 +1,6 @@
 # LibIPC
 
-LibIPC is a simple library for inter-process communication (IPC) on Windows, based on Named Pipes. It is designed for asynchronous client-to-server communication, making it ideal for integration into Command & Control (C2) implants and enabling remote execution capabilities such as fork&run.
+LibIPC is a simple Crystal Palace shared library for inter-process communication (IPC), based on Named Pipes. It is designed for asynchronous client-to-server communication, making it ideal for integration into Command & Control (C2) implants and enabling remote execution capabilities such as fork&run.
 
 ## Key Features
 
@@ -56,10 +56,10 @@ This Proof of Concept (PoC) demonstrates how LibIPC, together with Crystal Palac
 4. **Writing the master key**: Example of KeePass.exe writing the master key.
 	![KeePass Master Key](images/keepass.png)
 
-5. **C2 Server**: The server listening and receiving the result from the DLL.
+5. **C2 implant**: The fake implant listening and receiving the result from the DLL.
 	![Server Receiving Output](images/server.png)
 
-6. **Formatted Output**: The final output, well formatted and received by the C2 server.
+6. **Formatted Output**: The final output, well formatted and received by the C2 implant.
 	![Formatted Output](images/output.png)
 
 This workflow demonstrates how a conventional DLL can be used in a C2 context thanks to LibIPC and hooking techniques, without modifying the original DLL.
