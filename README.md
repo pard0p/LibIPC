@@ -5,6 +5,7 @@ LibIPC is a simple Crystal Palace shared library for inter-process communication
 ## Key Features
 
 - **Asynchronous IPC**: Client → server communication using Named Pipes.
+- **Local and Remote Pipes**: Support for both local (`\\.\pipe\`) and remote (`\\host\pipe\`) named pipes.
 - **Easy integration**: Focused on facilitating Crystal Palace integration in custom C2
 - **Remote capabilities**: Enables execution of modules or DLLs and receiving their output in the C2 implant.
 
@@ -13,10 +14,14 @@ LibIPC is a simple Crystal Palace shared library for inter-process communication
 LibIPC exposes the following main functions:
 
 - **InitializeIpcServer**  
-	Creates and initializes a named pipe server. Returns an `IpcInstance` with a valid channel handle on success.
+	Creates and initializes a named pipe server. Returns a valid handle on success.
 
 - **InitializeIpcClient**  
-	Connects to an existing named pipe server. Returns an `IpcInstance` with a valid channel handle on success.
+	Connects to an existing named pipe server (local or remote). 
+	- Local connection: `InitializeIpcClient("name", NULL)` → `\\.\pipe\name`
+	- Remote connection: `InitializeIpcClient("name", "hostname")` → `\\hostname\pipe\name`
+	
+	Returns a valid handle on success.
 
 - **CheckIpcMessages**  
 	Checks if there are pending messages in the pipe.

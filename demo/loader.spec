@@ -7,14 +7,14 @@ x64:
 		make pic +gofirst
 
 		dfr "resolve" "ror13"
-		mergelib "../libtcg/libtcg.x64.zip"
+		mergelib "../../libtcg/libtcg.x64.zip"
 
 		push $DLL
 			link "my_data"
 
 		load "bin/free.x64.o"
 			make object
-			mergelib "../libipc/libipc.x64.zip"
+			mergelib "../libipc.x64.zip"
 			export
 			link "my_bof"
 
@@ -23,7 +23,7 @@ x64:
 		load "bin/hook.x64.o"
 			make object
 			#patch "xorkey" $HKEY
-			mergelib "../libipc/libipc.x64.zip"
+			mergelib "../libipc.x64.zip"
 			export
 			link "my_hooks"
 

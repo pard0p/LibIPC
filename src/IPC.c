@@ -3,18 +3,151 @@
 #include <stdio.h>
 #include <windows.h>
 
-/* Helper functions */
+/* ========================================================================== */
+/* DYNAMIC FUNCTION RESOLUTION - MODULE$FUNCTION DECLARATIONS               */
+/* ========================================================================== */
 
-static void BuildPipeName(char* dest, const char* prefix, const char* name) {
-    const char* fullPrefix = "\\\\.\\pipe\\";
-    int i, j;
+/* KERNEL32 Functions */
+WINBASEAPI HANDLE WINAPI KERNEL32$CreateNamedPipeA(
+    LPCSTR lpName,
+    DWORD dwOpenMode,
+    DWORD dwPipeMode,
+    DWORD nMaxInstances,
+    DWORD nOutBufferSize,
+    DWORD nInBufferSize,
+    DWORD nDefaultTimeOut,
+    LPSECURITY_ATTRIBUTES lpSecurityAttributes
+);
+
+WINBASEAPI BOOL WINAPI KERNEL32$ConnectNamedPipe(
+    HANDLE hNamedPipe,
+    LPOVERLAPPED lpOverlapped
+);
+
+WINBASEAPI HANDLE WINAPI KERNEL32$CreateFileA(
+    LPCSTR lpFileName,
+    DWORD dwDesiredAccess,
+    DWORD dwShareMode,
+    LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+    DWORD dwCreationDisposition,
+    DWORD dwFlagsAndAttributes,
+    HANDLE hTemplateFile
+);
+
+WINBASEAPI BOOL WINAPI KERNEL32$SetNamedPipeHandleState(
+    HANDLE hNamedPipe,
+    LPDWORD lpMode,
+    LPDWORD lpMaxCollectionCount,
+    LPDWORD lpCollectDataTimeout
+);
+
+WINBASEAPI BOOL WINAPI KERNEL32$PeekNamedPipe(
+    HANDLE hNamedPipe,
+    LPVOID lpBuffer,
+    DWORD nBufferSize,
+    LPDWORD lpBytesRead,
+    LPDWORD lpTotalBytesAvail,
+    LPDWORD lpBytesLeftThisMessage
+);
+
+WINBASEAPI BOOL WINAPI KERNEL32$ReadFile(
+    HANDLE hFile,
+    LPVOID lpBuffer,
+    DWORD nNumberOfBytesToRead,
+    LPDWORD lpNumberOfBytesRead,
+    LPOVERLAPPED lpOverlapped
+);
+
+WINBASEAPI BOOL WINAPI KERNEL32$WriteFile(
+    HANDLE hFile,
+    LPCVOID lpBuffer,
+    DWORD nNumberOfBytesToWrite,
+    LPDWORD lpNumberOfBytesWritten,
+    LPOVERLAPPED lpOverlapped
+);
+
+WINBASEAPI BOOL WINAPI KERNEL32$FlushFileBuffers(
+    HANDLE hFile
+);
+
+WINBASEAPI BOOL WINAPI KERNEL32$DisconnectNamedPipe(
+    HANDLE hNamedPipe
+);
+
+WINBASEAPI BOOL WINAPI KERNEL32$CloseHandle(
+    HANDLE hObject
+);
+
+WINBASEAPI DWORD WINAPI KERNEL32$GetLastError(VOID);
+
+WINBASEAPI BOOL WINAPI KERNEL32$CreatePipe(
+    PHANDLE hReadPipe,
+    PHANDLE hWritePipe,
+    LPSECURITY_ATTRIBUTES lpPipeAttributes,
+    DWORD nSize
+);
+
+WINBASEAPI VOID WINAPI KERNEL32$Sleep(DWORD dwMilliseconds);
+
+WINBASEAPI BOOL WINAPI KERNEL32$WaitNamedPipeA(
+    LPCSTR lpNamedPipeName,
+    DWORD nTimeOut
+);
+
+WINBASEAPI BOOL WINAPI KERNEL32$WriteFileEx(
+    HANDLE hFile,
+    LPCVOID lpBuffer,
+    DWORD nNumberOfBytesToWrite,
+    LPOVERLAPPED lpOverlapped,
+    LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
+);
+
+WINBASEAPI BOOL WINAPI KERNEL32$GetFileType(
+    HANDLE hFile
+);
+
+/* MSVCRT Functions */
+WINBASEAPI size_t WINAPI MSVCRT$strlen(
+    const char* str
+);
+
+WINBASEAPI void* WINAPI MSVCRT$memcpy(
+    void* dest,
+    const void* src,
+    size_t n
+);
+
+/* Helper functions */
+static void BuildPipeName(char* dest, const char* name, const char* host) {
+    int i = 0;
+    int j = 0;
     
-    /* Copy prefix */
-    for (i = 0; fullPrefix[i] != '\0'; i++) {
-        dest[i] = fullPrefix[i];
+    if (host == NULL) {
+        /* Local pipe: \\.\pipe\ */
+        const char* localPrefix = "\\\\.\\pipe\\";
+        for (i = 0; localPrefix[i] != '\0'; i++) {
+            dest[i] = localPrefix[i];
+        }
+    } else {
+        /* Remote pipe: \\<host>\pipe\ */
+        dest[i++] = '\\';
+        dest[i++] = '\\';
+        
+        /* Copy hostname */
+        for (j = 0; host[j] != '\0'; j++) {
+            dest[i + j] = host[j];
+        }
+        i += j;
+        
+        dest[i++] = '\\';
+        dest[i++] = 'p';
+        dest[i++] = 'i';
+        dest[i++] = 'p';
+        dest[i++] = 'e';
+        dest[i++] = '\\';
     }
     
-    /* Copy name */
+    /* Copy pipe name */
     for (j = 0; name[j] != '\0'; j++) {
         dest[i + j] = name[j];
     }
@@ -23,7 +156,7 @@ static void BuildPipeName(char* dest, const char* prefix, const char* name) {
 
 HANDLE InitializeIpcServer(const char* channel_name) {
     char pipe_name[256];
-    BuildPipeName(pipe_name, "\\\\.\\pipe\\", channel_name);
+    BuildPipeName(pipe_name, channel_name, NULL);
     
     HANDLE h_pipe = KERNEL32$CreateNamedPipeA(
         pipe_name,
@@ -57,9 +190,9 @@ HANDLE InitializeIpcServer(const char* channel_name) {
     return h_pipe;
 }
 
-HANDLE InitializeIpcClient(const char* channel_name) {
+HANDLE InitializeIpcClient(const char* channel_name, const char* host) {
     char pipe_name[256];
-    BuildPipeName(pipe_name, "\\\\.\\pipe\\", channel_name);
+    BuildPipeName(pipe_name, channel_name, host);
     
     /* Try to connect immediately, don't wait */
     HANDLE h_pipe = KERNEL32$CreateFileA(

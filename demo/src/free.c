@@ -39,7 +39,7 @@ void go(char * loader, char * dllEntry, char * dllBase, IpcInstance* ipc) {
 	KERNEL32$VirtualFree(loader, 0, MEM_RELEASE);
 
 	/* Initialize our IPC channel */
-	ipc->h_channel = InitializeIpcClient("async_channel");
+	ipc->h_channel = InitializeIpcClient("async_channel", NULL);
 
 	/* call the entry point of our Reflective DLL */
 	((DLLMAIN_FUNC)dllEntry)((HINSTANCE)dllBase, DLL_PROCESS_ATTACH, NULL);
